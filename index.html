@@ -319,8 +319,22 @@ function tone(freq,start,dur,type,gain){
   g.gain.exponentialRampToValueAtTime(.0001,t+dur);
   o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.02);
 }
-const sfxCorrect=()=>{tone(523,0,.16,"sine",.18);tone(659,.09,.16,"sine",.18);tone(784,.18,.28,"sine",.2);};
-const sfxTry=()=>{tone(392,0,.16,"sine",.14);tone(330,.12,.24,"sine",.14);}; // soft, gentle, not a buzzer
+// --- varied, juicy success sounds (a random one each time, so it never feels repetitive) ---
+function gChord(){tone(523,0,.34,"sine",.11);tone(659,0,.34,"sine",.11);tone(784,.02,.40,"sine",.12);}
+function gBell(){tone(523,0,.15,"sine",.17);tone(659,.09,.15,"sine",.17);tone(784,.18,.30,"sine",.19);}
+function gSparkle(){tone(784,0,.09,"triangle",.13);tone(988,.07,.09,"triangle",.13);tone(1319,.15,.22,"triangle",.15);}
+function gRise(){tone(440,0,.10,"sine",.13);tone(587,.08,.10,"sine",.14);tone(880,.16,.26,"sine",.17);}
+function gTwoStep(){tone(659,0,.12,"triangle",.15);tone(880,.12,.26,"sine",.17);}
+const GOOD_SFX=[gChord,gBell,gSparkle,gRise,gTwoStep];
+const sfxCorrect=()=>rand(GOOD_SFX)();
+// --- gentle, inviting "try again" sounds — warm, never a harsh buzzer ---
+function tDip(){tone(392,0,.16,"sine",.12);tone(330,.12,.26,"sine",.12);}
+function tWobble(){tone(440,0,.12,"triangle",.10);tone(392,.11,.14,"triangle",.10);tone(440,.24,.16,"triangle",.10);}
+function tSoft(){tone(349,0,.20,"sine",.11);tone(415,.14,.22,"sine",.10);}
+const TRY_SFX=[tDip,tWobble,tSoft];
+const sfxTry=()=>rand(TRY_SFX)();
+// --- longer happy melody for finishing a level ---
+function sfxCelebrate(){[[523,0],[659,.11],[784,.22],[1047,.36],[880,.50],[1047,.60],[1319,.74]].forEach(function(p){tone(p[0],p[1],.22,"sine",.15);});}
 const sfxPop=()=>{tone(880,0,.1,"triangle",.16);tone(1174,.06,.14,"triangle",.14);};
 const sfxSelect=()=>{tone(660,0,.05,"square",.06);};
 function sfxPage(){const c=actx();if(!c)return;const t=c.currentTime;
@@ -438,12 +452,11 @@ function renderHome(){
     <p class="sub">משחק חקירה של מילים וצלילים 🔍</p>
     <button class="big-start" id="startBtn">▶ ${totalStars>0?"המשך לחקור":"בוא נתחיל!"}</button>
     <div class="voicebar" id="voicebar"></div>
-    <button class="studio-link" id="studioBtn">🎙️ סטודיו הקלטות — קול אנושי (לא חובה)</button>
     <div class="levels" id="lvls"></div>
   </div>`);
   stage.innerHTML="";stage.appendChild(page);
   buildVoiceBar(page.querySelector("#voicebar"));
-  page.querySelector("#studioBtn").onclick=()=>{actx();renderStudio();};
+  // 🎙️ סטודיו-ההקלטות מוסתר בינתיים (renderStudio עדיין קיים — להחזרה עתידית: הוסף כפתור #studioBtn)
   const lvls=page.querySelector("#lvls");
   LEVELS.forEach((L,i)=>{
     const un=lvUnlocked(i),done=lvActs(i).length,got=lvStars(i);
@@ -756,7 +769,7 @@ function renderStudio(){
 
 function renderCelebrate(lv){
   topbar.style.display="flex";refreshTop();
-  burst(70);sfxCorrect();setTimeout(()=>burst(50),250);
+  burst(70);sfxCelebrate();setTimeout(()=>burst(50),250);
   const nextLv=lv+1, hasNext=LEVELS[nextLv];
   const page=el(`<div class="book celebrate turn">
     <div class="trophy">🏆</div>
