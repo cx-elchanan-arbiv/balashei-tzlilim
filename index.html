@@ -1,0 +1,785 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>בלשי הצלילים · משחק</title>
+<style>
+  :root{
+    --paper:#FBF6EC; --paper2:#FFFDF8; --ink:#33302A; --ink-soft:#7A7469;
+    --line:#E7DFCE; --blue:#3D6AA8; --blue-soft:#E4ECF7;
+    --mint:#3E9E7A; --mint-soft:#E0F1E9; --ochre:#E89A3C; --ochre-soft:#FBEAD1;
+    --rose:#D9705F; --rose-soft:#FBE6E1; --gold:#F2B233;
+    --good:#3E9E7A; --soft-wrong:#E89A3C;
+    --shadow:0 10px 30px rgba(51,48,42,.14);
+    --font:"Assistant","Arial Hebrew","Heebo",system-ui,-apple-system,sans-serif;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    direction:rtl;font-family:var(--font);color:var(--ink);
+    background:
+      radial-gradient(1200px 500px at 80% -5%, #FDEFD6 0%, transparent 60%),
+      radial-gradient(900px 500px at 10% 105%, #E4ECF7 0%, transparent 55%),
+      var(--paper);
+    min-height:100%;display:flex;flex-direction:column;align-items:center;
+    padding:18px 14px 40px;overflow-x:hidden;
+  }
+  button{font-family:var(--font);cursor:pointer;border:none;background:none}
+  .stage{width:100%;max-width:640px;display:flex;flex-direction:column;gap:0}
+
+  /* ---------- Notebook card ---------- */
+  .book{
+    position:relative;background:var(--paper2);border-radius:22px;
+    box-shadow:var(--shadow);border:1px solid var(--line);
+    padding:26px 24px 30px;overflow:hidden;
+  }
+  .book::before{ /* spiral binding */
+    content:"";position:absolute;top:0;bottom:0;right:0;width:16px;
+    background:
+      repeating-linear-gradient(to bottom, transparent 0 14px, rgba(51,48,42,.10) 14px 18px, transparent 18px 30px);
+    border-inline-start:1px dashed var(--line);
+  }
+  .book::after{ /* faint ruled lines */
+    content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;
+    background:repeating-linear-gradient(to bottom, transparent 0 33px, var(--blue-soft) 33px 34px);
+    -webkit-mask-image:linear-gradient(to bottom,transparent 0 90px,#000 90px);
+            mask-image:linear-gradient(to bottom,transparent 0 90px,#000 90px);
+  }
+  .book>*{position:relative;z-index:1}
+
+  .turn{animation:turn .5s ease both}
+  @keyframes turn{
+    0%{transform:rotateY(-14deg) translateX(28px);opacity:0;transform-origin:right center}
+    100%{transform:none;opacity:1}
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{width:100%;max-width:640px;display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .home-btn{
+    width:44px;height:44px;border-radius:14px;background:var(--paper2);
+    border:1px solid var(--line);font-size:20px;display:grid;place-items:center;box-shadow:var(--shadow)
+  }
+  .stars-pill{
+    margin-inline-start:auto;display:inline-flex;align-items:center;gap:7px;
+    background:var(--paper2);border:1px solid var(--line);border-radius:999px;
+    padding:8px 16px;font-weight:800;box-shadow:var(--shadow);font-size:16px
+  }
+  .stars-pill .n{font-variant-numeric:tabular-nums}
+  .dots{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--line)}
+  .dot.done{background:var(--mint)}
+  .dot.cur{background:var(--blue);transform:scale(1.35)}
+
+  /* ---------- Cover / Home ---------- */
+  .cover{text-align:center;padding:34px 26px 34px}
+  .cover .lens{width:120px;height:120px;margin:0 auto 6px;animation:float 4s ease-in-out infinite}
+  @keyframes float{50%{transform:translateY(-8px)}}
+  .cover h1{font-size:46px;font-weight:800;margin:6px 0 4px;letter-spacing:-.02em}
+  .cover h1 .c{color:var(--ochre)}
+  .cover .sub{color:var(--ink-soft);font-weight:700;font-size:16px;margin:0 0 4px}
+  .big-start{
+    margin:20px auto 8px;display:inline-flex;align-items:center;gap:10px;
+    background:var(--mint);color:#fff;font-weight:800;font-size:20px;
+    padding:16px 34px;border-radius:18px;box-shadow:0 8px 20px rgba(62,158,122,.4);
+    transition:transform .12s
+  }
+  .big-start:active{transform:scale(.96)}
+  .levels{display:flex;flex-direction:column;gap:12px;margin-top:24px;text-align:start}
+  .lv{
+    display:flex;align-items:center;gap:14px;background:var(--paper2);
+    border:1.5px solid var(--line);border-radius:16px;padding:14px 16px;
+    transition:transform .12s,border-color .2s;width:100%;text-align:start
+  }
+  .lv:active{transform:scale(.98)}
+  .lv .icon{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;color:#fff;font-size:22px;flex:0 0 auto}
+  .lv-1 .icon{background:var(--mint)} .lv-2 .icon{background:var(--ochre)} .lv-3 .icon{background:var(--blue)}
+  .lv .body{flex:1}
+  .lv .body h3{margin:0 0 3px;font-size:18px;font-weight:800}
+  .lv .body p{margin:0;font-size:13px;color:var(--ink-soft)}
+  .lv .lvstars{font-size:13px;font-weight:800;color:var(--gold);white-space:nowrap}
+  .lv.locked{opacity:.55}
+  .lv.locked .icon{background:#B9B2A3}
+
+  /* voice/speed settings */
+  .voicebar{margin:14px 0 2px}
+  .vb{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+  .vrow{display:flex;align-items:center;gap:10px}
+  .vlab{font-weight:800;font-size:14px;white-space:nowrap;min-width:74px;text-align:start}
+  .vsel{flex:1;font-family:var(--font);font-size:14px;font-weight:700;padding:9px 10px;border-radius:10px;border:1.5px solid var(--line);background:var(--paper2);color:var(--ink)}
+  .vtest{background:var(--blue-soft);color:var(--blue);font-weight:800;font-size:13px;padding:9px 14px;border-radius:10px;white-space:nowrap}
+  .vrate,#vrate{flex:1;accent-color:var(--blue)}
+  .vval{font-weight:800;font-size:13px;color:var(--ink-soft);min-width:70px;text-align:start}
+  .vnote{font-size:12.5px;color:var(--ink-soft);background:var(--ochre-soft);border-radius:10px;padding:9px 12px;line-height:1.5}
+
+  /* ---------- Activity ---------- */
+  .q-instr{display:flex;align-items:flex-start;gap:12px;margin-bottom:6px}
+  .q-instr h2{font-size:22px;font-weight:800;margin:0;line-height:1.3;flex:1}
+  .q-sub{color:var(--ink-soft);font-weight:600;font-size:14px;margin:0 0 18px}
+  .speak-btn{
+    flex:0 0 auto;width:48px;height:48px;border-radius:14px;background:var(--blue);color:#fff;
+    font-size:22px;display:grid;place-items:center;box-shadow:0 6px 14px rgba(61,106,168,.35);
+    transition:transform .12s
+  }
+  .speak-btn:active{transform:scale(.9)}
+  .speak-btn.mini{width:34px;height:34px;font-size:15px;border-radius:10px;background:var(--blue-soft);color:var(--blue);box-shadow:none}
+
+  .wordcard{
+    display:flex;align-items:center;justify-content:center;gap:14px;
+    background:var(--ochre-soft);border-radius:18px;padding:22px 20px;margin-bottom:20px;
+    font-size:44px;font-weight:800;letter-spacing:.02em
+  }
+  .verse{background:var(--blue-soft);border-radius:16px;padding:18px 20px;margin-bottom:18px;font-size:21px;line-height:1.95;font-weight:700}
+  .verse .l{display:block}
+  .verse .gap{display:inline-block;min-width:80px;border-bottom:3px dotted var(--blue);height:1.1em;vertical-align:-.3em}
+
+  .opts{display:grid;gap:12px}
+  .opts.cols-2{grid-template-columns:1fr 1fr}
+  .opts.cols-3{grid-template-columns:repeat(3,1fr)}
+  .opt{
+    position:relative;background:var(--paper2);border:2.5px solid var(--line);border-radius:16px;
+    padding:18px 14px;font-size:28px;font-weight:800;min-height:64px;
+    display:flex;align-items:center;justify-content:center;gap:8px;transition:transform .1s,border-color .15s,background .15s
+  }
+  .opt:active{transform:scale(.96)}
+  .opt.word{font-size:24px}
+  .opt .spk{position:absolute;inset-inline-start:8px;top:8px;width:28px;height:28px;border-radius:8px;background:var(--blue-soft);color:var(--blue);font-size:13px;display:grid;place-items:center}
+  .opt.correct{background:var(--mint-soft);border-color:var(--mint);animation:pop .4s}
+  .opt.wrong{background:var(--ochre-soft);border-color:var(--soft-wrong);animation:wobble .4s}
+  .opt.picked{border-color:var(--blue);background:var(--blue-soft)}
+  .opt.dim{opacity:.45}
+  @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.08)}100%{transform:scale(1)}}
+  @keyframes wobble{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+  /* match */
+  .match{display:flex;gap:16px;justify-content:center}
+  .match .col{display:flex;flex-direction:column;gap:11px;flex:1;max-width:230px}
+  .m{
+    background:var(--paper2);border:2.5px solid var(--line);border-radius:14px;padding:14px 10px;
+    font-size:21px;font-weight:800;text-align:center;transition:transform .1s,border-color .15s,background .15s
+  }
+  .m:active{transform:scale(.97)}
+  .m.picked{border-color:var(--blue);background:var(--blue-soft)}
+  .m.done{border-color:var(--mint);background:var(--mint-soft);pointer-events:none}
+  .m.done::after{content:"✓";color:var(--mint);margin-inline-start:6px}
+  .m.miss{animation:wobble .4s}
+
+  /* feedback banner */
+  .fb{margin-top:18px;min-height:30px;display:flex;align-items:center;gap:10px;font-weight:800;font-size:17px}
+  .fb.good{color:var(--good)} .fb.try{color:var(--soft-wrong)}
+  .hint{margin-top:10px;background:var(--paper);border:1px dashed var(--line);border-radius:12px;padding:10px 14px;font-size:14px;color:var(--ink-soft)}
+  .hint b{color:var(--ink)}
+
+  .next-btn{
+    margin-top:20px;width:100%;background:var(--blue);color:#fff;font-weight:800;font-size:19px;
+    padding:15px;border-radius:16px;box-shadow:0 6px 16px rgba(61,106,168,.35);transition:transform .12s
+  }
+  .next-btn:active{transform:scale(.98)}
+  .next-btn.good{background:var(--mint);box-shadow:0 6px 16px rgba(62,158,122,.4)}
+  .retry-row{margin-top:14px;display:flex;gap:10px}
+  .ghost{flex:1;background:var(--paper2);border:1.5px solid var(--line);border-radius:14px;padding:13px;font-weight:800;font-size:15px;color:var(--ink)}
+
+  /* celebrate screen */
+  .celebrate{text-align:center;padding:36px 24px}
+  .celebrate .trophy{font-size:76px;animation:float 3s ease-in-out infinite}
+  .celebrate h2{font-size:30px;font-weight:800;margin:8px 0 6px}
+  .celebrate p{color:var(--ink-soft);font-weight:700;margin:0 0 8px}
+  .starburst{font-size:30px;letter-spacing:6px;margin:12px 0}
+
+  /* recording studio */
+  .studio-link{margin:10px 0 2px;width:100%;background:var(--rose-soft);color:var(--rose-deep);font-weight:800;font-size:14px;padding:12px;border-radius:12px;border:1px solid var(--line)}
+  .studio-note{display:none;margin:10px 0;background:var(--ochre-soft);border-radius:10px;padding:10px 14px;font-size:13.5px;line-height:1.5}
+  .studio-note.show{display:block}
+  .studio-sec{margin-top:16px}
+  .studio-sec h3{font-size:15px;font-weight:800;margin:0 0 8px;color:var(--ink-soft)}
+  .studio-list{display:flex;flex-direction:column;gap:8px}
+  .srow{display:flex;align-items:center;gap:10px;background:var(--paper2);border:1.5px solid var(--line);border-radius:12px;padding:8px 12px}
+  .srow.has{border-color:var(--mint);background:var(--mint-soft)}
+  .stext{flex:1;font-weight:700;font-size:16px}
+  .sctrls{display:flex;align-items:center;gap:6px}
+  .srec{background:var(--rose-soft);color:var(--rose-deep);font-weight:800;font-size:13px;padding:8px 12px;border-radius:9px;white-space:nowrap}
+  .srec.on{background:var(--rose-deep);color:#fff;animation:blink 1s infinite}
+  @keyframes blink{50%{opacity:.55}}
+  .splay,.sclear{background:var(--blue-soft);color:var(--blue);font-weight:800;font-size:14px;padding:8px 11px;border-radius:9px}
+  .splay:disabled,.sclear:disabled{opacity:.35}
+  .sok{color:var(--mint);font-weight:900;width:16px;text-align:center}
+
+  #confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+  .thinking{color:var(--blue);font-weight:800;font-size:15px;margin-top:14px;opacity:0;transition:opacity .3s}
+  .thinking.show{opacity:1}
+
+  @media (max-width:480px){
+    .cover h1{font-size:38px}.wordcard{font-size:36px}.opt{font-size:24px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation-duration:.001s!important}
+    .turn{animation:none}
+  }
+</style>
+
+<canvas id="confetti"></canvas>
+<div class="topbar" id="topbar" style="display:none">
+  <button class="home-btn" id="homeBtn" aria-label="בית">🏠</button>
+  <div class="dots" id="dots"></div>
+  <div class="stars-pill"><span>⭐</span><span class="n" id="starCount">0</span></div>
+</div>
+<div class="stage" id="stage"></div>
+
+<script>
+(function(){
+"use strict";
+
+/* ============ DATA ============ */
+const LEVELS = [
+  {name:"מתחילים לחקור", icon:"🔍", cls:"lv-1", desc:"הברות · צליל ראשון ואחרון · השמטה והחלפה"},
+  {name:"בלשים מתקדמים", icon:"🎵", cls:"lv-2", desc:"חרוזים — לזהות, להתאים ולמצוא"},
+  {name:"בלשים משוררים", icon:"🖋️", cls:"lv-3", desc:"להשלים חרוז בשיר ולחשוב על מילים"},
+];
+
+const A = [
+  // ---- LEVEL 0 (שלב 1) ----
+  {id:"s1a",lv:0,kind:"choice",instr:"כמה הברות שומעים במילה?",sub:"לחצו על 🔊, מִחאו כף לכל הברה, ובחרו מספר.",speak:"כלב",display:"כלב",cols:3,words:false,
+    options:[{t:"1"},{t:"2"},{t:"3"}],answer:"2",hint:"אמרו לאט: כְּ־לֶב. שתי פעימות!"},
+  {id:"s1b",lv:0,kind:"choice",instr:"כמה הברות שומעים במילה?",sub:"מִחאו כף לכל חתיכה של המילה.",speak:"גלידה",display:"גלידה",cols:3,words:false,
+    options:[{t:"2"},{t:"3"},{t:"4"}],answer:"3",hint:"גְּ־לי־דָה. שלוש פעימות!"},
+  {id:"s1c",lv:0,kind:"choice",instr:"מהו הצליל הראשון של המילה?",sub:"הקשיבו לתחילת המילה ובחרו את האות.",speak:"שועל",display:"שועל",cols:3,words:false,
+    options:[{t:"מ"},{t:"ש"},{t:"ל"}],answer:"ש",hint:"שְׁ... הצליל הראשון הוא ששש."},
+  {id:"s1d",lv:0,kind:"choice",instr:"מהו הצליל הראשון של המילה?",sub:"מה שומעים כשהמילה מתחילה?",speak:"תפוז",display:"תפוז",cols:3,words:false,
+    options:[{t:"ז"},{t:"פ"},{t:"ת"}],answer:"ת",hint:"תּ... כמו בתוף, בתפוח."},
+  {id:"s1e",lv:0,kind:"choice",instr:"מהו הצליל האחרון של המילה?",sub:"החזיקו את הקול על הסוף של המילה.",speak:"דג",display:"דג",cols:3,words:false,
+    options:[{t:"ד"},{t:"ג"},{t:"ב"}],answer:"ג",hint:"דָג... הסוף נשמע גּ."},
+  {id:"s1f",lv:0,kind:"choice",instr:"מהו הצליל האחרון של המילה?",sub:"מה נשמע בסוף המילה?",speak:"גמל",display:"גמל",cols:3,words:false,
+    options:[{t:"ל"},{t:"מ"},{t:"ג"}],answer:"ל",hint:"גָּמָל... הסוף נשמע לְ."},
+  {id:"s1g",lv:0,kind:"choice",instr:"אמרו 'כלב' בלי הצליל הראשון. איזו מילה נשארת?",sub:"מורידים את כְּ — ומה שומעים?",speak:"כלב",display:"כלב",cols:3,words:true,
+    options:[{t:"כל"},{t:"לב"},{t:"בל"}],answer:"לב",hint:"כלב בלי כְּ = לב. איפה פועם? בַּלב!"},
+  {id:"s1h",lv:0,kind:"choice",instr:"החליפו ב'קר' את הצליל קְ בצליל דְ. מה יצא?",sub:"קְר... מחליפים את ההתחלה לדְ.",speak:"קר",display:"קר",cols:3,words:true,
+    options:[{t:"דר"},{t:"קד"},{t:"רק"}],answer:"דר",hint:"במקום קְר אומרים דְר — כמו 'דר' בבית."},
+  {id:"s1i",lv:0,kind:"choice",instr:"איזו מילה מתחרזת עם 'שיר'?",sub:"חרוז = נשמע דומה בסוף. לחצו על 🔊 שליד כל מילה.",speak:"שיר",display:"שיר",cols:3,words:true,
+    options:[{t:"ספר"},{t:"עיר"},{t:"יד"}],answer:"עיר",hint:"שיר... עיר. שניהם נגמרים ב־יר!"},
+
+  // ---- LEVEL 1 (שלב 2) ----
+  {id:"s2a",lv:1,kind:"choice",instr:"איזו מילה מתחרזת עם 'מדינה'?",sub:"שתי ההברות האחרונות צריכות להישמע דומה.",speak:"מדינה",display:"מדינה",cols:3,words:true,
+    options:[{t:"כלב"},{t:"ספינה"},{t:"שולחן"}],answer:"ספינה",hint:"מְדִי־נָה... סְפִי־נָה. שניהם ־ינה!"},
+  {id:"s2b",lv:1,kind:"choice",instr:"איזו מילה מתחרזת עם 'מחברת'?",sub:"הקשיבו לסוף הארוך של המילה.",speak:"מחברת",display:"מחברת",cols:3,words:true,
+    options:[{t:"כותרת"},{t:"תפוח"},{t:"בלון"}],answer:"כותרת",hint:"מַחְבֶּ־רֶת... כּוֹתֶ־רֶת. שניהם ־ֶרֶת!"},
+  {id:"s2c",lv:1,kind:"match",instr:"חברו כל מילה לזוג שחורז איתה.",sub:"לחצו על מילה מימין, ואז על החרוז שלה משמאל.",
+    pairs:[["מדינה","ספינה"],["מחברת","כותרת"],["ארוחה","מנוחה"],["תמונה","שכונה"]]},
+
+  // ---- LEVEL 2 (שלב 3) ----
+  {id:"s3a",lv:2,kind:"choice",instr:"השלימו את החרוז בסוף השיר.",sub:"קראו בקול, ובחרו מילה שחורזת עם 'ספינה'.",speak:"בים הגדול שטה ספינה, היא מפליגה אל ה...",
+    verse:["בַּיָּם הַגָּדוֹל שָׁטָה סְפִינָה,","הִיא מַפְלִיגָה אֶל הַ<span class='gap'></span>."],cols:3,words:true,
+    options:[{t:"כלב"},{t:"מדינה"},{t:"שולחן"}],answer:"מדינה",hint:"ספינה... מדינה. שומעים ־ינה בשניהם!"},
+  {id:"s3b",lv:2,kind:"choice",instr:"השלימו את החרוז בסוף השיר.",sub:"מה חורז עם 'שמים'?",speak:"עפה ציפור גבוה בשמים, ושותה טיפה של...",
+    verse:["עָפָה צִפּוֹר גָּבֹהַּ בַּשָּׁמַיִם,","וְשׁוֹתָה טִפָּה שֶׁל <span class='gap'></span>."],cols:3,words:true,
+    options:[{t:"אש"},{t:"מים"},{t:"עץ"}],answer:"מים",hint:"שמים... מים. שניהם ־ַיִם!"},
+  {id:"s3c",lv:2,kind:"choice",instr:"השלימו את החרוז בסוף השיר.",sub:"מה חורז עם 'ירח'?",speak:"בלילה זורח הירח, ובבית מחכה לי...",
+    verse:["בַּלַּיְלָה זוֹרֵחַ הַיָּרֵחַ,","וּבַבַּיִת מְחַכֶּה לִי <span class='gap'></span>."],cols:3,words:true,
+    options:[{t:"אורח"},{t:"שמש"},{t:"כוכב"}],answer:"אורח",hint:"יָרֵחַ... אוֹרֵחַ. שניהם ־רֵחַ!"},
+  {id:"s3d",lv:2,kind:"multi",instr:"בחרו את כל המילים שחורזות עם 'כדור'.",sub:"אפשר לבחור יותר מאחת! לחצו על 🔊 כדי לשמוע.",speak:"כדור",display:"כדור",cols:3,words:true,
+    options:[{t:"אור",ok:true},{t:"תפוח",ok:false},{t:"שחור",ok:true},{t:"ילד",ok:false},{t:"צינור",ok:true},{t:"כלב",ok:false}],
+    hint:"כדור... אוֹר, שָׁחוֹר, צִינוֹר — כולם ־וֹר!"},
+];
+
+// ניקוד להגייה נכונה ב-TTS (התצוגה נשארת בלי ניקוד; רק הדיבור מנוקד)
+const NIKUD={
+  "כלב":"כֶּלֶב","גלידה":"גְּלִידָה","שועל":"שׁוּעָל","תפוז":"תַּפּוּז","דג":"דָּג","גמל":"גָּמָל",
+  "לב":"לֵב","כל":"כֹּל","בל":"בָּל","קר":"קַר","דר":"דָּר","קד":"קַד","רק":"רַק",
+  "שיר":"שִׁיר","עיר":"עִיר","ספר":"סֵפֶר","יד":"יָד",
+  "מדינה":"מְדִינָה","ספינה":"סְפִינָה","שולחן":"שֻׁלְחָן","מחברת":"מַחְבֶּרֶת","כותרת":"כּוֹתֶרֶת",
+  "תפוח":"תַּפּוּחַ","בלון":"בַּלּוֹן","ארוחה":"אֲרוּחָה","מנוחה":"מְנוּחָה","תמונה":"תְּמוּנָה","שכונה":"שְׁכוּנָה",
+  "שמים":"שָׁמַיִם","מים":"מַיִם","אש":"אֵשׁ","עץ":"עֵץ","ירח":"יָרֵחַ","אורח":"אוֹרֵחַ",
+  "שמש":"שֶׁמֶשׁ","כוכב":"כּוֹכָב","כדור":"כַּדּוּר","אור":"אוֹר","שחור":"שָׁחוֹר","ילד":"יֶלֶד","צינור":"צִינוֹר"
+};
+
+const GOOD=["כל הכבוד על החשיבה! ⭐","יפה מאוד, שמעת את הצליל! 👂","אלוף, חשבת טוב! 🌟","בדיוק! עבודת בלש מצוינת 🔍","וואו, דייקת! 🎉","מעולה, לקחת את הזמן וחשבת 💛"];
+const TRY=["כמעט! בוא נקשיב שוב 🤔","ננסה עוד פעם, קח את הזמן 💛","יפה שניסית! נחשוב יחד 🧩","קרוב! לחץ על 🔊 ותקשיב עוד פעם 👂"];
+const rand=a=>a[Math.floor(Math.random()*a.length)];
+
+/* ============ STATE ============ */
+const KEY="balashei-tzlilim-v1";
+let S={done:{},stars:0};
+try{const r=localStorage.getItem(KEY);if(r)S=JSON.parse(r);}catch(e){}
+if(!S.done)S.done={};if(typeof S.stars!=="number")S.stars=0;
+if(typeof S.rate!=="number")S.rate=0.72;      // slower, kinder for kids
+if(typeof S.voiceName!=="string")S.voiceName="";
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}};
+
+const lvStart=lv=>A.findIndex(a=>a.lv===lv);
+const lvActs=lv=>A.filter(a=>a.lv===lv);
+const lvDone=lv=>lvActs(lv).every(a=>S.done[a.id]);
+const lvUnlocked=lv=>lv===0||lvDone(lv-1);
+const lvStars=lv=>lvActs(lv).filter(a=>S.done[a.id]).length;
+
+/* ============ AUDIO ============ */
+let ac=null;
+function actx(){ if(!ac){try{ac=new (window.AudioContext||window.webkitAudioContext)();}catch(e){}} if(ac&&ac.state==="suspended")ac.resume(); return ac; }
+function tone(freq,start,dur,type,gain){
+  const c=actx();if(!c)return;const t=c.currentTime+start;
+  const o=c.createOscillator(),g=c.createGain();
+  o.type=type||"sine";o.frequency.value=freq;
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain||.2,t+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.02);
+}
+const sfxCorrect=()=>{tone(523,0,.16,"sine",.18);tone(659,.09,.16,"sine",.18);tone(784,.18,.28,"sine",.2);};
+const sfxTry=()=>{tone(392,0,.16,"sine",.14);tone(330,.12,.24,"sine",.14);}; // soft, gentle, not a buzzer
+const sfxPop=()=>{tone(880,0,.1,"triangle",.16);tone(1174,.06,.14,"triangle",.14);};
+const sfxSelect=()=>{tone(660,0,.05,"square",.06);};
+function sfxPage(){const c=actx();if(!c)return;const t=c.currentTime;
+  const b=c.createBuffer(1,c.sampleRate*.3,c.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
+  const s=c.createBufferSource();s.buffer=b;const f=c.createBiquadFilter();f.type="bandpass";f.frequency.value=1600;
+  const g=c.createGain();g.gain.value=.12;s.connect(f).connect(g).connect(c.destination);s.start(t);
+}
+
+let curVoice=null;
+function heVoices(){
+  const vs=window.speechSynthesis?speechSynthesis.getVoices():[];
+  return vs.filter(v=>/he|iw/i.test(v.lang));
+}
+function voiceScore(v){ // prefer the most natural installed Hebrew voice
+  const n=(v.name||"").toLowerCase();let s=0;
+  if(/siri/.test(n))s+=5;
+  if(/enhanced|premium|natural|neural/.test(n))s+=4;
+  if(v.localService)s+=1;
+  return s;
+}
+function pickVoice(){
+  const vs=heVoices();if(!vs.length){curVoice=null;return;}
+  if(S.voiceName){const m=vs.find(v=>v.name===S.voiceName);if(m){curVoice=m;return;}}
+  curVoice=vs.slice().sort((a,b)=>voiceScore(b)-voiceScore(a))[0];
+}
+if(window.speechSynthesis){pickVoice();speechSynthesis.onvoiceschanged=()=>{pickVoice();var vb=document.getElementById("voicebar");if(vb&&typeof buildVoiceBar==="function")buildVoiceBar(vb);};}
+
+function speak(txt,opts){
+  if(!window.speechSynthesis||!txt)return;
+  speechSynthesis.cancel();
+  if(!curVoice)pickVoice();
+  // silent "warm-up" so the engine doesn't swallow the FIRST sound (fixes כלב→לב)
+  const warm=new SpeechSynthesisUtterance(" ");
+  warm.volume=0;warm.rate=1;warm.lang="he-IL";if(curVoice)warm.voice=curVoice;
+  const u=new SpeechSynthesisUtterance(NIKUD[txt]||txt);
+  u.lang="he-IL";if(curVoice)u.voice=curVoice;
+  u.rate=(opts&&opts.rate)||S.rate||0.72;u.pitch=1.05;
+  try{speechSynthesis.speak(warm);speechSynthesis.speak(u);}catch(e){}
+}
+const speakWord=t=>speak(t,{rate:Math.max(0.55,(S.rate||0.72)-0.06)}); // single words: a touch slower
+
+/* ===== Recorded human voice (works on a standalone site / localhost; the mic is blocked inside an artifact) ===== */
+const IDB={db:null,
+  open(){return new Promise(res=>{ if(IDB.db)return res(IDB.db); let r; try{r=indexedDB.open("balashei_voice",1);}catch(e){return res(null);}
+    r.onupgradeneeded=e=>{try{e.target.result.createObjectStore("clips");}catch(_){}};
+    r.onsuccess=e=>{IDB.db=e.target.result;res(IDB.db);}; r.onerror=()=>res(null); });},
+  async get(k){const db=await IDB.open();if(!db)return null;return new Promise(res=>{try{const t=db.transaction("clips","readonly").objectStore("clips").get(k);t.onsuccess=()=>res(t.result||null);t.onerror=()=>res(null);}catch(e){res(null);}});},
+  async put(k,v){const db=await IDB.open();if(!db)return false;return new Promise(res=>{try{const t=db.transaction("clips","readwrite").objectStore("clips").put(v,k);t.onsuccess=()=>res(true);t.onerror=()=>res(false);}catch(e){res(false);}});},
+  async del(k){const db=await IDB.open();if(!db)return;try{db.transaction("clips","readwrite").objectStore("clips").delete(k);}catch(e){}},
+  async keys(){const db=await IDB.open();if(!db)return [];return new Promise(res=>{try{const t=db.transaction("clips","readonly").objectStore("clips").getAllKeys();t.onsuccess=()=>res(t.result||[]);t.onerror=()=>res([]);}catch(e){res([]);}});}
+};
+let recKeys=new Set();
+IDB.keys().then(k=>{recKeys=new Set(k);});
+let curClip=null;
+async function playRec(k){
+  const blob=await IDB.get(k);if(!blob)return false;
+  try{ if(window.speechSynthesis)speechSynthesis.cancel(); if(curClip){curClip.pause();}
+    curClip=new Audio(URL.createObjectURL(blob)); curClip.play(); return true;
+  }catch(e){return false;}
+}
+// unified content voice: prefer a human recording, else niqqud-TTS
+function say(txt,word){ if(txt&&recKeys.has(txt)){ playRec(txt); return; } word?speakWord(txt):speak(txt); }
+
+/* ============ CONFETTI ============ */
+const cv=document.getElementById("confetti"),cx=cv.getContext("2d");
+let parts=[],raf=null;
+function sizeCv(){cv.width=innerWidth;cv.height=innerHeight;}
+addEventListener("resize",sizeCv);sizeCv();
+const reduce=matchMedia("(prefers-reduced-motion:reduce)").matches;
+function burst(n){
+  if(reduce)return;
+  const cols=["#F2B233","#3E9E7A","#3D6AA8","#E89A3C","#D9705F"];
+  for(let i=0;i<(n||36);i++)parts.push({
+    x:innerWidth/2+(Math.random()-.5)*120,y:innerHeight*.38,
+    vx:(Math.random()-.5)*7,vy:-Math.random()*9-3,
+    s:5+Math.random()*6,c:cols[i%cols.length],r:Math.random()*6,vr:(Math.random()-.5)*.4,life:0
+  });
+  if(!raf)raf=requestAnimationFrame(loop);
+}
+function loop(){
+  cx.clearRect(0,0,cv.width,cv.height);
+  parts=parts.filter(p=>p.life<90);
+  parts.forEach(p=>{p.vy+=.28;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;p.life++;
+    cx.save();cx.translate(p.x,p.y);cx.rotate(p.r);cx.fillStyle=p.c;cx.globalAlpha=Math.max(0,1-p.life/90);
+    cx.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);cx.restore();});
+  if(parts.length)raf=requestAnimationFrame(loop);else{raf=null;cx.clearRect(0,0,cv.width,cv.height);}
+}
+
+/* ============ RENDER ============ */
+const stage=document.getElementById("stage");
+const topbar=document.getElementById("topbar");
+const starCount=document.getElementById("starCount");
+const dotsEl=document.getElementById("dots");
+document.getElementById("homeBtn").onclick=()=>{actx();renderHome();};
+
+function refreshTop(){starCount.textContent=S.stars;}
+function el(html){const d=document.createElement("div");d.innerHTML=html.trim();return d.firstElementChild;}
+
+function renderHome(){
+  topbar.style.display="none";refreshTop();
+  const firstUndone=A.find(a=>!S.done[a.id]);
+  const resumeLv=firstUndone?firstUndone.lv:0;
+  const totalStars=A.filter(a=>S.done[a.id]).length;
+  const page=el(`<div class="book cover turn">
+    <div class="lens" aria-hidden="true">
+      <svg viewBox="0 0 120 120" fill="none">
+        <circle cx="52" cy="50" r="32" stroke="#3D6AA8" stroke-width="9"/>
+        <circle cx="52" cy="50" r="19" fill="#E0F1E9"/>
+        <path d="M52 36v28M38 50h28" stroke="#3E9E7A" stroke-width="6" stroke-linecap="round"/>
+        <rect x="74" y="70" width="12" height="40" rx="6" transform="rotate(-45 74 70)" fill="#E89A3C"/>
+      </svg>
+    </div>
+    <h1>בלשי <span class="c">הצלילים</span></h1>
+    <p class="sub">משחק חקירה של מילים וצלילים 🔍</p>
+    <button class="big-start" id="startBtn">▶ ${totalStars>0?"המשך לחקור":"בוא נתחיל!"}</button>
+    <div class="voicebar" id="voicebar"></div>
+    <button class="studio-link" id="studioBtn">🎙️ סטודיו הקלטות — קול אנושי (לא חובה)</button>
+    <div class="levels" id="lvls"></div>
+  </div>`);
+  stage.innerHTML="";stage.appendChild(page);
+  buildVoiceBar(page.querySelector("#voicebar"));
+  page.querySelector("#studioBtn").onclick=()=>{actx();renderStudio();};
+  const lvls=page.querySelector("#lvls");
+  LEVELS.forEach((L,i)=>{
+    const un=lvUnlocked(i),done=lvActs(i).length,got=lvStars(i);
+    const card=el(`<button class="lv ${L.cls} ${un?"":"locked"}">
+      <span class="icon">${un?L.icon:"🔒"}</span>
+      <span class="body"><h3>שלב ${i+1} · ${L.name}</h3><p>${un?L.desc:"סיימו את השלב הקודם כדי לפתוח"}</p></span>
+      <span class="lvstars">${"★".repeat(got)}${"☆".repeat(done-got)}</span>
+    </button>`);
+    card.onclick=()=>{actx();if(!un){sfxTry();speak("סיימו קודם את השלב הקודם");return;}goLevel(i);};
+    lvls.appendChild(card);
+  });
+  page.querySelector("#startBtn").onclick=()=>{actx();goLevel(resumeLv,firstUndone?A.indexOf(firstUndone):lvStart(resumeLv));};
+}
+
+function rateLabel(r){return r<0.62?"איטי מאוד 🐢":r<0.74?"איטי":r<0.9?"רגיל":"מהיר";}
+function buildVoiceBar(box){
+  const vs=heVoices();
+  const bar=el(`<div class="vb">
+    <div class="vrow">
+      <span class="vlab">🔊 קול</span>
+      <select class="vsel" id="vsel" ${vs.length?"":"disabled"}></select>
+      <button class="vtest" id="vtest">נסה ▶</button>
+    </div>
+    <div class="vrow">
+      <span class="vlab">🐢 מהירות</span>
+      <input type="range" id="vrate" min="0.55" max="1" step="0.03" value="${S.rate}">
+      <span class="vval" id="vval">${rateLabel(S.rate)}</span>
+    </div>
+    ${vs.length?"":`<div class="vnote">לא נמצא קול עברי במכשיר. אפשר להתקין קול עברי טבעי (Carmit / Siri) בהגדרות המכשיר — זה נשמע הרבה יותר אנושי.</div>`}
+  </div>`);
+  box.innerHTML="";box.appendChild(bar);
+  const sel=bar.querySelector("#vsel");
+  if(vs.length){
+    vs.slice().sort((a,b)=>voiceScore(b)-voiceScore(a)).forEach(v=>{
+      const nice=/siri|enhanced|premium|natural|neural/i.test(v.name)?" ✨":"";
+      const o=document.createElement("option");o.value=v.name;o.textContent=v.name.replace(/\(.*\)/,"").trim()+nice;
+      if(curVoice&&v.name===curVoice.name)o.selected=true;sel.appendChild(o);
+    });
+    sel.onchange=()=>{S.voiceName=sel.value;pickVoice();save();actx();speakWord("שלום, אני הקול החדש");};
+  }
+  bar.querySelector("#vtest").onclick=()=>{actx();speak("שלום! בוא נשחק. המילה היא כלב.");};
+  const rg=bar.querySelector("#vrate"),vv=bar.querySelector("#vval");
+  rg.oninput=()=>{S.rate=parseFloat(rg.value);vv.textContent=rateLabel(S.rate);};
+  rg.onchange=()=>{save();actx();speakWord("כלב");};
+}
+
+function goLevel(lv,idx){
+  const start=(typeof idx==="number"&&idx>=0)?idx:lvStart(lv);
+  // resume within level at first undone, else start
+  let i=start;
+  const acts=lvActs(lv);const firstUndoneInLv=acts.find(a=>!S.done[a.id]);
+  if(firstUndoneInLv&&A[start].lv!==lv)i=A.indexOf(firstUndoneInLv);
+  renderActivity(i);
+}
+
+function renderDots(lv,curId){
+  dotsEl.innerHTML="";
+  lvActs(lv).forEach(a=>{
+    const d=document.createElement("div");
+    d.className="dot"+(S.done[a.id]?" done":"")+(a.id===curId?" cur":"");
+    dotsEl.appendChild(d);
+  });
+}
+
+function renderActivity(i){
+  const a=A[i];if(!a){return renderHome();}
+  topbar.style.display="flex";refreshTop();renderDots(a.lv,a.id);
+  sfxPage();
+  if(a.kind==="match")return renderMatch(a,i);
+  return renderChoice(a,i);
+}
+
+function speakBtn(txt,mini,word){
+  const b=el(`<button class="speak-btn${mini?" mini":""}" aria-label="השמע">🔊</button>`);
+  b.onclick=e=>{e.stopPropagation();actx();say(txt,word);};
+  return b;
+}
+
+function renderChoice(a,i){
+  const multi=a.kind==="multi";
+  const page=el(`<div class="book turn">
+    <div class="q-instr"><h2>${a.instr}</h2></div>
+    <p class="q-sub">${a.sub||""}</p>
+    ${a.verse?`<div class="verse">${a.verse.map(l=>`<span class="l">${l}</span>`).join("")}</div>`:""}
+    ${a.display?`<div class="wordcard"><span>${a.display}</span></div>`:""}
+    <div class="opts cols-${a.cols||2}" id="opts"></div>
+    <div class="fb" id="fb"></div>
+    <div id="tail"></div>
+  </div>`);
+  // attach speak button in instruction
+  page.querySelector(".q-instr").insertBefore(speakBtn(a.speak),page.querySelector(".q-instr h2"));
+  // speaker on word card
+  if(a.display&&a.words){page.querySelector(".wordcard").appendChild(speakBtn(a.display,true,true));}
+  stage.innerHTML="";stage.appendChild(page);
+  actx();say(a.speak, a.words && !a.verse);
+
+  const optsEl=page.querySelector("#opts"),fb=page.querySelector("#fb"),tail=page.querySelector("#tail");
+  let locked=false, chosen=new Set(), solved=false;
+
+  a.options.forEach(o=>{
+    const b=el(`<button class="opt ${a.words?"word":""}">${o.t}</button>`);
+    if(a.words)b.appendChild(speakBtn(o.t,true,true)).classList.add("spk");
+    b.onclick=()=>{
+      if(locked&&!multi)return;
+      actx();
+      if(multi){
+        if(solved)return;
+        if(chosen.has(o.t)){chosen.delete(o.t);b.classList.remove("picked");sfxSelect();}
+        else{chosen.add(o.t);b.classList.add("picked");sfxSelect();if(a.words)say(o.t,true);}
+        return;
+      }
+      if(a.words)say(o.t,true);
+      handleSingle(o,b);
+    };
+    b.dataset.t=o.t;
+    optsEl.appendChild(b);
+  });
+
+  function handleSingle(o,b){
+    const ok=(o.t===a.answer);
+    if(ok){win([b]);}
+    else{miss(b,o);}
+  }
+
+  if(multi){
+    const chk=el(`<button class="next-btn" id="chk">בדקו אותי ✓</button>`);
+    chk.onclick=()=>{
+      if(solved)return;actx();
+      const correctSet=new Set(a.options.filter(o=>o.ok).map(o=>o.t));
+      const okAll=[...correctSet].every(t=>chosen.has(t))&&[...chosen].every(t=>correctSet.has(t));
+      if(chosen.size===0){sfxTry();speak("בחרו לפחות מילה אחת");flash(fb,"try","בחרו מילה אחת לפחות 🙂");return;}
+      if(okAll){
+        solved=true;
+        [...optsEl.children].forEach(b=>{if(chosen.has(b.dataset.t))b.classList.add("correct");});
+        win([...optsEl.children].filter(b=>chosen.has(b.dataset.t)));
+      }else{
+        // gentle: mark wrong picks, keep going
+        [...optsEl.children].forEach(b=>{if(chosen.has(b.dataset.t)&&!correctSet.has(b.dataset.t))b.classList.add("wrong");});
+        softMiss();
+      }
+    };
+    tail.appendChild(chk);
+  }
+
+  function win(btns){
+    locked=true;solved=true;
+    btns.forEach(b=>b.classList.add("correct"));
+    [...optsEl.children].forEach(b=>{if(!btns.includes(b))b.classList.add("dim");});
+    sfxCorrect();burst(40);
+    const msg=rand(GOOD);flash(fb,"good","✓ "+msg);speak(msg.replace(/[^֐-׿ ]/g,""));
+    if(!S.done[a.id]){S.done[a.id]=true;S.stars++;refreshTop();save();sfxPop();}
+    else save();
+    showNext();
+  }
+  function miss(b,o){
+    b.classList.add("wrong");sfxTry();
+    const msg=rand(TRY);flash(fb,"try",msg);
+    thinkThenHint(a,tail);
+    locked=true;
+    // allow retry after a short "think" beat (discourage rapid guessing)
+    setTimeout(()=>{b.classList.remove("wrong");locked=false;},900);
+  }
+  function softMiss(){
+    sfxTry();const msg=rand(TRY);flash(fb,"try",msg);
+    thinkThenHint(a,tail);
+    setTimeout(()=>{[...optsEl.children].forEach(b=>b.classList.remove("wrong"));},900);
+  }
+
+  function showNext(){
+    tail.innerHTML="";
+    const last=(A[i+1]===undefined)||(A[i+1].lv!==a.lv);
+    const btn=el(`<button class="next-btn good">${last?"סיימתי את השלב! 🎉":"הבא ←"}</button>`);
+    btn.onclick=()=>{actx(); last?renderCelebrate(a.lv):renderActivity(i+1);};
+    tail.appendChild(btn);
+  }
+}
+
+let hintTimer=null;
+function thinkThenHint(a,tail){
+  clearTimeout(hintTimer);
+  // remove old hint/think
+  tail.querySelectorAll(".hint,.thinking").forEach(n=>n.remove());
+  const th=el(`<div class="thinking">חשוב רגע… מה שומעים? 🤔</div>`);
+  tail.appendChild(th);requestAnimationFrame(()=>th.classList.add("show"));
+  hintTimer=setTimeout(()=>{
+    th.remove();
+    if(a.hint){const h=el(`<div class="hint"><b>רמז:</b> ${a.hint}</div>`);tail.appendChild(h);speak(a.hint);}
+  },1400);
+}
+
+function flash(fb,cls,txt){fb.className="fb "+cls;fb.textContent=txt;}
+
+function renderMatch(a,i){
+  const left=a.pairs.map(p=>p[0]);
+  const right=a.pairs.map(p=>p[1]).slice().sort(()=>0); // keep, then shuffle deterministically-ish
+  // simple shuffle by index rotation (no Math.random reliance issues)
+  const rt=a.pairs.map(p=>p[1]);
+  for(let k=rt.length-1;k>0;k--){const j=(k*7+3)%(k+1);[rt[k],rt[j]]=[rt[j],rt[k]];}
+  const page=el(`<div class="book turn">
+    <div class="q-instr"><h2>${a.instr}</h2></div>
+    <p class="q-sub">${a.sub||""}</p>
+    <div class="match">
+      <div class="col" id="colL"></div>
+      <div class="col" id="colR"></div>
+    </div>
+    <div class="fb" id="fb"></div>
+    <div id="tail"></div>
+  </div>`);
+  page.querySelector(".q-instr").insertBefore(speakBtn(a.instr),page.querySelector(".q-instr h2"));
+  stage.innerHTML="";stage.appendChild(page);
+  const colL=page.querySelector("#colL"),colR=page.querySelector("#colR"),fb=page.querySelector("#fb"),tail=page.querySelector("#tail");
+  const map={};a.pairs.forEach(p=>map[p[0]]=p[1]);
+  let pickedL=null,doneCount=0;
+
+  left.forEach(w=>{const b=el(`<button class="m">${w}</button>`);b.dataset.w=w;
+    b.onclick=()=>{if(b.classList.contains("done"))return;actx();say(w,true);
+      colL.querySelectorAll(".m").forEach(x=>x.classList.remove("picked"));
+      b.classList.add("picked");pickedL=b;sfxSelect();};
+    colL.appendChild(b);});
+  rt.forEach(w=>{const b=el(`<button class="m">${w}</button>`);b.dataset.w=w;
+    b.onclick=()=>{if(b.classList.contains("done"))return;actx();say(w,true);
+      if(!pickedL){flash(fb,"try","קודם בחרו מילה מימין 👉");sfxSelect();return;}
+      if(map[pickedL.dataset.w]===w){
+        pickedL.classList.remove("picked");pickedL.classList.add("done");b.classList.add("done");
+        sfxCorrect();burst(20);doneCount++;pickedL=null;
+        flash(fb,"good","✓ יפה! זוג חורז 🎵");
+        if(doneCount===a.pairs.length)finishMatch();
+      }else{
+        b.classList.add("miss");sfxTry();flash(fb,"try",rand(TRY));
+        setTimeout(()=>b.classList.remove("miss"),450);
+      }
+    };
+    colR.appendChild(b);});
+
+  function finishMatch(){
+    burst(50);const msg="כל הכבוד! מצאת את כל הזוגות 🌟";flash(fb,"good","✓ "+msg);speak(msg.replace(/[^֐-׿ ]/g,""));
+    if(!S.done[a.id]){S.done[a.id]=true;S.stars++;refreshTop();save();sfxPop();}else save();
+    const last=(A[i+1]===undefined)||(A[i+1].lv!==a.lv);
+    const btn=el(`<button class="next-btn good">${last?"סיימתי את השלב! 🎉":"הבא ←"}</button>`);
+    btn.onclick=()=>{actx();last?renderCelebrate(a.lv):renderActivity(i+1);};
+    tail.appendChild(btn);
+  }
+}
+
+function speakables(){
+  const words=new Set(), sents=new Set();
+  A.forEach(a=>{
+    if(a.words){ if(a.display)words.add(a.display); (a.options||[]).forEach(o=>words.add(o.t)); if(a.speak&&!a.verse)words.add(a.speak); }
+    if(a.kind==="match")a.pairs.forEach(p=>{words.add(p[0]);words.add(p[1]);});
+    if(a.instr)sents.add(a.instr);
+    if(a.verse&&a.speak)sents.add(a.speak);
+  });
+  return {words:[...words],sents:[...sents]};
+}
+let mediaStream=null, mediaRec=null, recChunks=[], recordingKey=null;
+async function ensureMic(){
+  if(mediaStream)return true;
+  if(!navigator.mediaDevices||!navigator.mediaDevices.getUserMedia)return {name:"NoAPI"};
+  try{ mediaStream=await navigator.mediaDevices.getUserMedia({audio:true}); return true; }
+  catch(e){ return e; }
+}
+function renderStudio(){
+  topbar.style.display="flex";refreshTop();dotsEl.innerHTML="";
+  const {words,sents}=speakables();
+  const page=el(`<div class="book turn">
+    <div class="q-instr"><h2>🎙️ סטודיו הקלטות</h2></div>
+    <p class="q-sub">הקליטו כל מילה בקול אנושי — והמשחק ישמיע אותה במקום הקול המלאכותי. מה שלא מוקלט יישמע ב-Carmit.</p>
+    <div class="studio-note" id="micNote"></div>
+    <div class="studio-sec"><h3>מילים (${words.length})</h3><div class="studio-list" id="wlist"></div></div>
+    <div class="studio-sec"><h3>הוראות ומשפטים (${sents.length})</h3><div class="studio-list" id="slist"></div></div>
+    <button class="next-btn" id="backHome">🏠 חזרה למשחק</button>
+  </div>`);
+  stage.innerHTML="";stage.appendChild(page);
+  page.querySelector("#backHome").onclick=()=>{actx();renderHome();};
+  const wlist=page.querySelector("#wlist"),slist=page.querySelector("#slist"),micNote=page.querySelector("#micNote");
+  function row(text){
+    const has=recKeys.has(text), rec=recordingKey===text;
+    const r=el(`<div class="srow ${has?'has':''}">
+      <span class="stext">${text}</span>
+      <span class="sctrls">
+        <button class="srec ${rec?'on':''}">${rec?'⏹ עצור':'⏺ הקלט'}</button>
+        <button class="splay"${has?'':' disabled'}>▶</button>
+        <button class="sclear"${has?'':' disabled'}>🗑</button>
+        <span class="sok">${has?'✓':''}</span>
+      </span></div>`);
+    r.querySelector(".srec").onclick=()=>toggleRecord(text);
+    r.querySelector(".splay").onclick=()=>{actx();playRec(text);};
+    r.querySelector(".sclear").onclick=async()=>{await IDB.del(text);recKeys.delete(text);fill();};
+    return r;
+  }
+  function fill(){wlist.innerHTML="";slist.innerHTML="";words.forEach(w=>wlist.appendChild(row(w)));sents.forEach(s=>slist.appendChild(row(s)));}
+  fill();
+  async function toggleRecord(k){
+    if(mediaRec&&mediaRec.state==="recording"){mediaRec.stop();return;}
+    const mic=await ensureMic();
+    if(mic!==true){
+      micNote.innerHTML=(mic&&/NotAllowed|Security|NoAPI/i.test(mic.name||""))
+        ?"🎤 המיקרופון חסום כאן (קורה בתוך artifact). כדי להקליט — הריצו את האפליקציה כאתר / localhost (ההוראות בצ׳אט)."
+        :"🎤 לא הצלחתי לגשת למיקרופון. בדקו את הרשאות הדפדפן.";
+      micNote.classList.add("show");return;
+    }
+    micNote.classList.remove("show");micNote.innerHTML="";
+    recChunks=[];recordingKey=k;
+    try{mediaRec=new MediaRecorder(mediaStream);}catch(e){micNote.textContent="הקלטה לא נתמכת בדפדפן הזה";micNote.classList.add("show");recordingKey=null;return;}
+    mediaRec.ondataavailable=e=>{if(e.data&&e.data.size)recChunks.push(e.data);};
+    mediaRec.onstop=async()=>{const type=recChunks[0]?recChunks[0].type:"audio/webm";const blob=new Blob(recChunks,{type});const ok=await IDB.put(k,blob);if(ok)recKeys.add(k);recordingKey=null;fill();};
+    mediaRec.start();fill();
+  }
+}
+
+function renderCelebrate(lv){
+  topbar.style.display="flex";refreshTop();
+  burst(70);sfxCorrect();setTimeout(()=>burst(50),250);
+  const nextLv=lv+1, hasNext=LEVELS[nextLv];
+  const page=el(`<div class="book celebrate turn">
+    <div class="trophy">🏆</div>
+    <h2>סיימת את שלב ${lv+1}!</h2>
+    <p>${LEVELS[lv].name} — עבודת בלש אמיתית 🔍</p>
+    <div class="starburst">⭐⭐⭐</div>
+    <p>אספת ${S.stars} כוכבים בסך הכל 💛</p>
+    <div id="c-tail"></div>
+  </div>`);
+  stage.innerHTML="";stage.appendChild(page);speak("כל הכבוד! סיימת שלב "+(lv+1));
+  const t=page.querySelector("#c-tail");
+  if(hasNext){
+    const b=el(`<button class="big-start" style="margin-top:18px">▶ לשלב ${nextLv+1}: ${LEVELS[nextLv].name}</button>`);
+    b.onclick=()=>{actx();goLevel(nextLv);};t.appendChild(b);
+  }else{
+    const b=el(`<button class="big-start" style="margin-top:18px">🎉 סיימת את כל החקירות!</button>`);
+    b.onclick=()=>{actx();renderHome();};t.appendChild(b);
+  }
+  const h=el(`<div style="margin-top:14px"><button class="ghost" style="width:auto;padding:11px 22px">🏠 חזרה לבית</button></div>`);
+  h.querySelector("button").onclick=()=>{actx();renderHome();};t.appendChild(h);
+}
+
+/* boot */
+renderHome();
+})();
+</script>
