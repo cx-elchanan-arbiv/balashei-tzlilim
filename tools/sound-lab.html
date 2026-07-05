@@ -2,82 +2,86 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>מעבדת צלילים — בלשי הצלילים</title>
 <style>
-  :root{--paper:#FBF6EC;--ink:#33302A;--soft:#7A7469;--line:#E7DFCE;--blue:#3D6AA8;--mint:#3E9E7A;--ochre:#E89A3C;--rose:#D9705F;}
-  body{font-family:-apple-system,system-ui,"Assistant",sans-serif;background:var(--paper);color:var(--ink);max-width:720px;margin:0 auto;padding:24px 18px 70px}
+  :root{--paper:#FBF6EC;--ink:#33302A;--soft:#7A7469;--line:#E7DFCE;--blue:#3D6AA8;--mint:#3E9E7A;--ochre:#E89A3C;--rose:#D9705F;--gold:#F2B233;}
+  body{font-family:-apple-system,system-ui,"Assistant",sans-serif;background:var(--paper);color:var(--ink);max-width:760px;margin:0 auto;padding:24px 18px 80px}
   h1{font-size:26px;margin:0 0 2px}p.sub{color:var(--soft);margin:0 0 20px}
   .sec{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:16px;box-shadow:0 6px 16px rgba(51,48,42,.07)}
-  .sec h2{margin:0 0 4px;font-size:19px;display:flex;align-items:center;gap:8px}
+  .sec h2{margin:0 0 4px;font-size:19px}
   .sec .hint{color:var(--soft);font-size:13px;margin:0 0 12px}
   .grid{display:flex;flex-wrap:wrap;gap:10px}
-  button.snd{border:2px solid var(--line);background:#FFFDF8;border-radius:12px;padding:12px 16px;font-weight:800;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:transform .1s,border-color .15s,background .15s;min-width:120px;justify-content:center}
-  button.snd:active{transform:scale(.95)}
-  button.snd .num{background:var(--blue);color:#fff;border-radius:8px;width:24px;height:24px;display:grid;place-items:center;font-size:13px}
-  .good h2 .num,.good button .num{}
-  .c-good button.snd .num{background:var(--mint)} .c-good h2{color:var(--mint)}
-  .c-try button.snd .num{background:var(--ochre)} .c-try h2{color:var(--ochre)}
-  .c-star button.snd .num{background:var(--gold,#F2B233)}
-  .c-next button.snd .num{background:var(--blue)} .c-next h2{color:var(--blue)}
-  .c-cel button.snd .num{background:var(--rose)} .c-cel h2{color:var(--rose)}
-  .c-tap button.snd .num{background:#8A8578}
+  button.snd{border:2px solid var(--line);background:#FFFDF8;border-radius:12px;padding:11px 15px;font-weight:800;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:transform .1s,border-color .15s;justify-content:center}
+  button.snd:active{transform:scale(.94)}
+  button.snd .num{color:#fff;border-radius:8px;width:23px;height:23px;display:grid;place-items:center;font-size:12px}
+  .c-good h2{color:var(--mint)} .c-good .num{background:var(--mint)}
+  .c-try h2{color:var(--ochre)} .c-try .num{background:var(--ochre)}
+  .c-star h2{color:#C99A16} .c-star .num{background:var(--gold)}
+  .c-next h2{color:var(--blue)} .c-next .num{background:var(--blue)}
+  .c-cel h2{color:var(--rose)} .c-cel .num{background:var(--rose)}
+  .c-tap h2{color:#6a675d} .c-tap .num{background:#8A8578}
   .tip{background:#FBEAD1;border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.6;margin-top:6px}
   .tip b{color:var(--ink)}
 </style></head><body>
-<h1>🎛️ מעבדת צלילים</h1>
-<p class="sub">לחץ על כל צליל להאזנה. תגיד לי איזה מספר אהבת בכל קטגוריה (למשל: "הצלחה 3, סיום 2, מעבר 1") — או "random".</p>
+<h1>🎛️ מעבדת צלילים <span style="font-size:14px;color:var(--soft);font-weight:400">v2 · משודרג</span></h1>
+<p class="sub">לחץ על כל צליל להאזנה. תגיד לי מספר לכל קטגוריה (למשל "הצלחה 3, סיום 5") — או "random".</p>
 
 <div class="sec c-good"><h2>✅ הצלחה <span style="font-size:13px;color:var(--soft);font-weight:400">(תשובה נכונה)</span></h2>
-  <p class="hint">קצר, נעים, מתגמל — אבל לא צעקני.</p><div class="grid" id="good"></div></div>
-
+  <p class="hint">קצר, נעים, מתגמל — לא צעקני.</p><div class="grid" id="good"></div></div>
 <div class="sec c-try"><h2>🤔 טעות מזמינה <span style="font-size:13px;color:var(--soft);font-weight:400">(נסה שוב)</span></h2>
-  <p class="hint">רך וחם, לא בּוּזֶר — מזמין לנסות שוב.</p><div class="grid" id="try"></div></div>
-
-<div class="sec c-star"><h2>⭐ כוכב <span style="font-size:13px;color:var(--soft);font-weight:400">(זכייה בכוכב)</span></h2>
+  <p class="hint">רך וחם, מזמין — לא בּוּזֶר.</p><div class="grid" id="try"></div></div>
+<div class="sec c-star"><h2>⭐ כוכב</h2>
   <p class="hint">נצנוץ קטן ומספק.</p><div class="grid" id="star"></div></div>
-
-<div class="sec c-next"><h2>➡️ מעבר לשלב/שאלה הבאה</h2>
-  <p class="hint">תחושת התקדמות — whoosh/עלייה.</p><div class="grid" id="next"></div></div>
-
+<div class="sec c-next"><h2>➡️ מעבר לשאלה/שלב הבא</h2>
+  <p class="hint">תחושת התקדמות.</p><div class="grid" id="next"></div></div>
 <div class="sec c-cel"><h2>🏆 סיום שלב <span style="font-size:13px;color:var(--soft);font-weight:400">(חגיגה)</span></h2>
   <p class="hint">מנגינה שמחה קצרה.</p><div class="grid" id="cel"></div></div>
+<div class="sec c-tap"><h2>👆 לחיצה / מעבר-דף</h2>
+  <p class="hint">מיקרו-משוב עדין.</p><div class="grid" id="tap"></div></div>
 
-<div class="sec c-tap"><h2>👆 לחיצה / מעבר-דף <span style="font-size:13px;color:var(--soft);font-weight:400">(עדין)</span></h2>
-  <p class="hint">מיקרו-משוב לכל נגיעה.</p><div class="grid" id="tap"></div></div>
-
-<div class="tip">💡 <b>איך לענות לי:</b> פשוט תכתוב מה בחרת מכל קטגוריה — לדוגמה: <b>"הצלחה 4, טעות 2, כוכב 1, מעבר 3, סיום 2, לחיצה 1"</b>. אפשר גם "עשה random על הכל" או "random רק בהצלחה". ואם משהו לא מוצא חן — תגיד ואוסיף עוד גרסאות.</div>
+<div class="tip">💡 <b>איך לענות:</b> "הצלחה 4, טעות 2, כוכב 1, מעבר 3, סיום 5, לחיצה 1" · או "random על הכל" · או "עוד גרסאות בהצלחה". מה שתבחר — אחבר למשחק ואעלה לאתר.</div>
 
 <script>
-let ac;
+let ac,echoNode;
 function AC(){if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.state==="suspended")ac.resume();return ac;}
-function bp(freq,start,dur,type,gain,glideTo){
-  const c=AC(),t=c.currentTime+start,o=c.createOscillator(),g=c.createGain();
-  o.type=type||"sine";o.frequency.setValueAtTime(freq,t);
-  if(glideTo)o.frequency.exponentialRampToValueAtTime(glideTo,t+dur);
-  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain||.2,t+.015);
-  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-  o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.03);
-}
-function noise(start,dur,gain,freq,q,type,glideTo){
-  const c=AC(),t=c.currentTime+start;
-  const b=c.createBuffer(1,Math.max(1,c.sampleRate*dur),c.sampleRate),d=b.getChannelData(0);
-  for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.4);
-  const s=c.createBufferSource();s.buffer=b;
-  const f=c.createBiquadFilter();f.type=type||"bandpass";f.frequency.setValueAtTime(freq||2000,t);
-  if(glideTo)f.frequency.exponentialRampToValueAtTime(glideTo,t+dur);
-  f.Q.value=q||1;const g=c.createGain();g.gain.value=gain||.15;
-  s.connect(f).connect(g).connect(c.destination);s.start(t);
-}
-const seq=(arr,type,gain,dur)=>arr.forEach(([f,t])=>bp(f,t,dur||.2,type||"sine",gain||.16));
+function echo(){const c=AC();if(!echoNode){echoNode=c.createDelay(1);echoNode.delayTime.value=.10;const fb=c.createGain();fb.gain.value=.26;const wet=c.createGain();wet.gain.value=.38;echoNode.connect(fb);fb.connect(echoNode);echoNode.connect(wet);wet.connect(c.destination);}return echoNode;}
+function connect(g,glossy){g.connect(AC().destination);if(glossy)g.connect(echo());}
+const vary=f=>f*(1+(Math.random()-.5)*0.02); // subtle pitch variation so repeats aren't robotic
 
-// ---- SOUND BANKS ----
+function bp(freq,start,dur,type,gain,glideTo,glossy,vib){
+  const c=AC(),t=c.currentTime+start,o=c.createOscillator(),g=c.createGain();
+  o.type=type||"sine";const f=vary(freq);o.frequency.setValueAtTime(f,t);
+  if(glideTo)o.frequency.exponentialRampToValueAtTime(glideTo,t+dur);
+  if(vib){const l=c.createOscillator(),lg=c.createGain();l.frequency.value=vib;lg.gain.value=f*0.012;l.connect(lg).connect(o.frequency);l.start(t);l.stop(t+dur+.05);}
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain||.2,t+.01);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  connect(g,glossy);o.start(t);o.stop(t+dur+.05);
+}
+function bell(freq,start,dur,gain,glossy){ // additive harmonics + slight inharmonicity = real chime
+  const c=AC(),t=c.currentTime+start;
+  [[1,1],[2.01,.5],[3.02,.25],[4.2,.11]].forEach(([m,a],i)=>{
+    const o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.value=vary(freq)*m;
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime((gain||.2)*a,t+.008);
+    g.gain.exponentialRampToValueAtTime(.0001,t+dur*(1-i*.15));
+    connect(g,glossy&&i===0);o.start(t);o.stop(t+dur+.05);
+  });
+}
+function pluck(freq,start,dur,gain){const c=AC(),t=c.currentTime+start,o=c.createOscillator(),g=c.createGain();o.type="triangle";o.frequency.value=vary(freq);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain||.18,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+dur);connect(g);o.start(t);o.stop(t+dur+.03);}
+function noise(start,dur,gain,freq,q,type,glideTo){const c=AC(),t=c.currentTime+start;const b=c.createBuffer(1,Math.max(1,c.sampleRate*dur),c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.4);const s=c.createBufferSource();s.buffer=b;const f=c.createBiquadFilter();f.type=type||"bandpass";f.frequency.setValueAtTime(freq||2000,t);if(glideTo)f.frequency.exponentialRampToValueAtTime(glideTo,t+dur);f.Q.value=q||1;const g=c.createGain();g.gain.value=gain||.15;s.connect(f).connect(g);connect(g);s.start(t);}
+const arp=(a,f,g,d,ty)=>a.forEach((x,i)=>bp(x,i*(f||.06),d||.2,ty||"sine",g||.14));
+
+// ================= SOUND BANKS =================
 const GOOD={
-  "פעמון":()=>seq([[523,0],[659,.09],[784,.18]],"sine",.17,.28),
-  "נצנוץ":()=>{seq([[784,0],[988,.07],[1319,.15]],"triangle",.14,.2);noise(.15,.25,.05,4000,2);},
-  "עלייה":()=>bp(440,0,.35,"sine",.16,1200),
-  "אקורד":()=>{bp(523,0,.4,"sine",.11);bp(659,0,.4,"sine",.11);bp(784,.02,.45,"sine",.12);},
-  "מטבע":()=>{bp(988,0,.08,"square",.12);bp(1319,.08,.22,"square",.13);},
-  "מרימבה":()=>seq([[659,0],[880,.09],[1047,.18]],"triangle",.16,.16),
-  "תיבת-נגינה":()=>seq([[1047,0],[1319,.1],[1568,.2]],"sine",.12,.3),
-  "דו-צליל":()=>{bp(659,0,.12,"triangle",.15);bp(880,.12,.28,"sine",.17);},
+  "פעמון הרמוני":()=>bell(659,0,.6,.2),
+  "נצנוץ מבריק":()=>arp([1319,1568,2093,2637],.05,.09,.3),
+  "עלייה קסומה":()=>[523,659,784,1047].forEach((f,i)=>bp(f,i*.06,.32,"sine",.14,0,false,6)),
+  "אקורד גדול":()=>{bell(523,0,.7,.12);bell(659,0,.7,.12);bell(784,.02,.75,.13);},
+  "מטבע":()=>{bp(988,0,.08,"square",.12);bp(1319,.08,.24,"square",.13);},
+  "מרימבה":()=>[659,880,1047].forEach((f,i)=>pluck(f,i*.08,.26,.18)),
+  "תיבת-נגינה":()=>[1047,1319,1568].forEach((f,i)=>bell(f,i*.1,.5,.1)),
+  "קסם (שימר)":()=>[784,988,1319].forEach((f,i)=>bp(f,i*.05,.4,"triangle",.1,0,true)),
+  "דינג-דונג":()=>{bell(784,0,.5,.18);bell(587,.16,.6,.18);},
+  "גליסנדו":()=>bp(523,0,.28,"sine",.16,1568),
+  "פופ מבריק":()=>{bp(880,0,.09,"triangle",.16);bell(1319,.05,.42,.12,true);},
+  "טרילה שמחה":()=>arp([1047,1319,1047,1319,1568],.06,.12,.15,"triangle"),
 };
 const TRY={
   "צניחה רכה":()=>{bp(392,0,.16,"sine",.12);bp(330,.12,.26,"sine",.12);},
@@ -85,22 +89,27 @@ const TRY={
   "רך":()=>{bp(349,0,.2,"sine",.11);bp(415,.14,.22,"sine",.1);},
   "המהום נמוך":()=>{bp(330,0,.18,"sine",.12);bp(294,.16,.28,"sine",.12);},
   "בּוֹאינג":()=>bp(500,0,.28,"sine",.13,240),
+  "אופס עדין":()=>{bp(440,0,.14,"sine",.11);bp(370,.12,.24,"sine",.11);},
 };
 const STAR={
   "פופ":()=>{bp(880,0,.1,"triangle",.16);bp(1174,.06,.14,"triangle",.14);},
-  "נצנוץ-כוכב":()=>seq([[1319,0],[1568,.06],[2093,.12]],"triangle",.12,.14),
-  "דינג":()=>bp(1047,0,.22,"sine",.16),
+  "נצנוץ-כוכב":()=>arp([1319,1568,2093],.05,.1,.18,"sine"),
+  "דינג הרמוני":()=>bell(1047,0,.4,.16),
+  "טווינקל":()=>[2093,1568,2093].forEach((f,i)=>bp(f,i*.05,.13,"sine",.09,0,true)),
 };
 const NEXT={
-  "וווש":()=>{noise(0,.3,.12,800,1,"bandpass",3000);bp(523,0,.28,"sine",.1,1047);},
-  "החלקה":()=>noise(0,.28,.14,600,1.5,"bandpass",4000),
+  "וווש":()=>{noise(0,.3,.12,700,1,"bandpass",3500);bp(523,0,.28,"sine",.09,1047);},
+  "החלקה":()=>noise(0,.26,.13,600,1.5,"bandpass",4000),
   "עלייה מהירה":()=>bp(523,0,.22,"sine",.14,1047),
+  "פליק מבריק":()=>{bp(1568,0,.08,"triangle",.1);noise(.02,.18,.08,3000,1,"highpass");},
 };
 const CEL={
-  "פאנפרה":()=>seq([[523,0],[659,.12],[784,.24],[1047,.38]],"sine",.15,.24),
-  "פאנפרה ארוכה":()=>seq([[392,0],[523,.12],[659,.24],[784,.36],[1047,.5]],"sine",.15,.26),
-  "ריצה עולה":()=>[523,587,659,784,880,1047,1319,1568].forEach((f,i)=>bp(f,i*.06,.16,"triangle",.13)),
-  "שמח":()=>seq([[659,0],[659,.12],[784,.24],[1047,.38],[880,.52],[1047,.62],[1319,.76]],"sine",.14,.22),
+  "פאנפרה":()=>[523,659,784,1047].forEach((f,i)=>bell(f,i*.14,.5,.15)),
+  "פאנפרה ארוכה":()=>[392,523,659,784,1047].forEach((f,i)=>bell(f,i*.13,.5,.14)),
+  "ריצת קסילופון":()=>[523,587,659,784,880,1047,1319,1568].forEach((f,i)=>pluck(f,i*.06,.2,.14)),
+  "שמח":()=>[659,659,784,1047,880,1047,1319].forEach((f,i)=>bp(f,i*.12,.24,"sine",.13)),
+  "טה־דה!":()=>{bell(659,0,.4,.13);bell(523,0,.4,.13);setTimeout(()=>{bell(880,0,.7,.16);bell(659,0,.7,.16);bell(1047,.02,.75,.16);},230);},
+  "ניצחון":()=>{[[523,0],[659,.15],[784,.3],[1047,.5]].forEach(([f,t])=>bell(f,t,.5,.14));bell(1568,.5,.9,.09,true);},
 };
 const TAP={
   "קליק":()=>bp(660,0,.05,"square",.07),
@@ -109,12 +118,7 @@ const TAP={
   "מעבר-דף":()=>noise(0,.3,.12,1600,1,"bandpass"),
 };
 
-function fill(id,bank){
-  const box=document.getElementById(id);let n=1;
-  for(const name in bank){const i=n++;const b=document.createElement("button");b.className="snd";
-    b.innerHTML='<span class="num">'+i+'</span>'+name;
-    b.onclick=()=>{AC();bank[name]();};box.appendChild(b);}
-}
+function fill(id,bank){const box=document.getElementById(id);let n=1;for(const name in bank){const i=n++;const b=document.createElement("button");b.className="snd";b.innerHTML='<span class="num">'+i+'</span>'+name;b.onclick=()=>{AC();try{bank[name]();}catch(e){console.error(e);}};box.appendChild(b);}}
 fill("good",GOOD);fill("try",TRY);fill("star",STAR);fill("next",NEXT);fill("cel",CEL);fill("tap",TAP);
 </script>
 </body></html>
