@@ -323,30 +323,62 @@ function tone(freq,start,dur,type,gain){
   g.gain.exponentialRampToValueAtTime(.0001,t+dur);
   o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.02);
 }
-// --- varied, juicy success sounds (a random one each time, so it never feels repetitive) ---
-function gChord(){tone(523,0,.34,"sine",.11);tone(659,0,.34,"sine",.11);tone(784,.02,.40,"sine",.12);}
-function gBell(){tone(523,0,.15,"sine",.17);tone(659,.09,.15,"sine",.17);tone(784,.18,.30,"sine",.19);}
-function gSparkle(){tone(784,0,.09,"triangle",.13);tone(988,.07,.09,"triangle",.13);tone(1319,.15,.22,"triangle",.15);}
-function gRise(){tone(440,0,.10,"sine",.13);tone(587,.08,.10,"sine",.14);tone(880,.16,.26,"sine",.17);}
-function gTwoStep(){tone(659,0,.12,"triangle",.15);tone(880,.12,.26,"sine",.17);}
-const GOOD_SFX=[gChord,gBell,gSparkle,gRise,gTwoStep];
-const sfxCorrect=()=>rand(GOOD_SFX)();
-// --- gentle, inviting "try again" sounds — warm, never a harsh buzzer ---
-function tDip(){tone(392,0,.16,"sine",.12);tone(330,.12,.26,"sine",.12);}
-function tWobble(){tone(440,0,.12,"triangle",.10);tone(392,.11,.14,"triangle",.10);tone(440,.24,.16,"triangle",.10);}
-function tSoft(){tone(349,0,.20,"sine",.11);tone(415,.14,.22,"sine",.10);}
-const TRY_SFX=[tDip,tWobble,tSoft];
-const sfxTry=()=>rand(TRY_SFX)();
-// --- longer happy melody for finishing a level ---
-function sfxCelebrate(){[[523,0],[659,.11],[784,.22],[1047,.36],[880,.50],[1047,.60],[1319,.74]].forEach(function(p){tone(p[0],p[1],.22,"sine",.15);});}
-const sfxPop=()=>{tone(880,0,.1,"triangle",.16);tone(1174,.06,.14,"triangle",.14);};
-const sfxSelect=()=>{tone(660,0,.05,"square",.06);};
-function sfxPage(){const c=actx();if(!c)return;const t=c.currentTime;
-  const b=c.createBuffer(1,c.sampleRate*.3,c.sampleRate),d=b.getChannelData(0);
-  for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
-  const s=c.createBufferSource();s.buffer=b;const f=c.createBiquadFilter();f.type="bandpass";f.frequency.value=1600;
-  const g=c.createGain();g.gain.value=.12;s.connect(f).connect(g).connect(c.destination);s.start(t);
-}
+/* ===== מנוע-סאונד עשיר: פעמונים הרמוניים, שימר עם הד, ויברטו, פראק-קסילופון ===== */
+let _echo;
+function _ec(){const c=actx();if(!c)return null;if(!_echo){_echo=c.createDelay(1);_echo.delayTime.value=.10;const fb=c.createGain();fb.gain.value=.26;const wet=c.createGain();wet.gain.value=.38;_echo.connect(fb);fb.connect(_echo);_echo.connect(wet);wet.connect(c.destination);}return _echo;}
+function _out(g,glossy){const c=actx();if(!c)return;g.connect(c.destination);if(glossy){const e=_ec();if(e)g.connect(e);}}
+const _vary=f=>f*(1+(Math.random()-.5)*0.02); // שינוי-גובה זעיר כדי שחזרות לא יישמעו רובוטיות
+function bp(freq,start,dur,type,gain,glideTo,glossy,vib){const c=actx();if(!c)return;const t=c.currentTime+start,o=c.createOscillator(),g=c.createGain();o.type=type||"sine";const f=_vary(freq);o.frequency.setValueAtTime(f,t);if(glideTo)o.frequency.exponentialRampToValueAtTime(glideTo,t+dur);if(vib){const l=c.createOscillator(),lg=c.createGain();l.frequency.value=vib;lg.gain.value=f*0.012;l.connect(lg).connect(o.frequency);l.start(t);l.stop(t+dur+.05);}g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain||.2,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);_out(g,glossy);o.start(t);o.stop(t+dur+.05);}
+function bell(freq,start,dur,gain,glossy){const c=actx();if(!c)return;const t=c.currentTime+start;[[1,1],[2.01,.5],[3.02,.25],[4.2,.11]].forEach(([m,a],i)=>{const o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.value=_vary(freq)*m;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime((gain||.2)*a,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+dur*(1-i*.15));o.connect(g);_out(g,glossy&&i===0);o.start(t);o.stop(t+dur+.05);});}
+function pluck(freq,start,dur,gain){const c=actx();if(!c)return;const t=c.currentTime+start,o=c.createOscillator(),g=c.createGain();o.type="triangle";o.frequency.value=_vary(freq);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain||.18,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);_out(g);o.start(t);o.stop(t+dur+.03);}
+function nz(start,dur,gain,freq,q,type,glideTo){const c=actx();if(!c)return;const t=c.currentTime+start;const b=c.createBuffer(1,Math.max(1,c.sampleRate*dur),c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.4);const s=c.createBufferSource();s.buffer=b;const f=c.createBiquadFilter();f.type=type||"bandpass";f.frequency.setValueAtTime(freq||2000,t);if(glideTo)f.frequency.exponentialRampToValueAtTime(glideTo,t+dur);f.Q.value=q||1;const g=c.createGain();g.gain.value=gain||.15;s.connect(f).connect(g);_out(g);s.start(t);}
+const _arp=(a,f,g,d,ty)=>a.forEach((x,i)=>bp(x,i*(f||.06),d||.2,ty||"sine",g||.14));
+
+/* ===== בנקי-אירועים — בחירה אקראית בכל פעם (מסונן לפי הבחירות שלך) ===== */
+const SFX_GOOD=[
+  ()=>bell(659,0,.6,.2),                                                 // פעמון הרמוני
+  ()=>_arp([1319,1568,2093,2637],.05,.09,.3),                            // נצנוץ מבריק
+  ()=>{bp(988,0,.08,"square",.12);bp(1319,.08,.24,"square",.13);},       // מטבע
+  ()=>[659,880,1047].forEach((f,i)=>pluck(f,i*.08,.26,.18)),             // מרימבה
+  ()=>[1047,1319,1568].forEach((f,i)=>bell(f,i*.1,.5,.1)),               // תיבת-נגינה
+  ()=>[784,988,1319].forEach((f,i)=>bp(f,i*.05,.4,"triangle",.1,0,true)),// קסם (שימר)
+  ()=>{bell(784,0,.5,.18);bell(587,.16,.6,.18);},                        // דינג-דונג
+  ()=>bp(523,0,.28,"sine",.16,1568),                                     // גליסנדו
+  ()=>{bp(880,0,.09,"triangle",.16);bell(1319,.05,.42,.12,true);},       // פופ מבריק
+  ()=>_arp([1047,1319,1047,1319,1568],.06,.12,.15,"triangle"),           // טרילה שמחה
+];
+const SFX_TRY=[
+  ()=>{bp(392,0,.16,"sine",.12);bp(330,.12,.26,"sine",.12);},
+  ()=>{bp(440,0,.12,"triangle",.1);bp(392,.11,.14,"triangle",.1);bp(440,.24,.16,"triangle",.1);},
+  ()=>{bp(349,0,.2,"sine",.11);bp(415,.14,.22,"sine",.1);},
+  ()=>{bp(330,0,.18,"sine",.12);bp(294,.16,.28,"sine",.12);},
+  ()=>bp(500,0,.28,"sine",.13,240),
+  ()=>{bp(440,0,.14,"sine",.11);bp(370,.12,.24,"sine",.11);},
+];
+const SFX_STAR=[
+  ()=>{bp(880,0,.1,"triangle",.16);bp(1174,.06,.14,"triangle",.14);},
+  ()=>bell(1047,0,.4,.16),
+  ()=>[2093,1568,2093].forEach((f,i)=>bp(f,i*.05,.13,"sine",.09,0,true)),
+];
+const SFX_NEXT=[
+  ()=>{nz(0,.3,.12,700,1,"bandpass",3500);bp(523,0,.28,"sine",.09,1047);},
+  ()=>nz(0,.26,.13,600,1.5,"bandpass",4000),
+  ()=>{bp(1568,0,.08,"triangle",.1);nz(.02,.18,.08,3000,1,"highpass");},
+];
+const SFX_CEL=[
+  ()=>[523,659,784,1047].forEach((f,i)=>bell(f,i*.14,.5,.15)),
+  ()=>[392,523,659,784,1047].forEach((f,i)=>bell(f,i*.13,.5,.14)),
+  ()=>[523,587,659,784,880,1047,1319,1568].forEach((f,i)=>pluck(f,i*.06,.2,.14)),
+  ()=>[659,659,784,1047,880,1047,1319].forEach((f,i)=>bp(f,i*.12,.24,"sine",.13)),
+  ()=>{bell(659,0,.4,.13);bell(523,0,.4,.13);setTimeout(()=>{bell(880,0,.7,.16);bell(659,0,.7,.16);bell(1047,.02,.75,.16);},230);},
+  ()=>{[[523,0],[659,.15],[784,.3],[1047,.5]].forEach(([f,t])=>bell(f,t,.5,.14));bell(1568,.5,.9,.09,true);},
+];
+const sfxCorrect=()=>rand(SFX_GOOD)();
+const sfxTry=()=>rand(SFX_TRY)();
+const sfxCelebrate=()=>rand(SFX_CEL)();
+const sfxPop=()=>rand(SFX_STAR)();   // כוכב
+const sfxPage=()=>rand(SFX_NEXT)();  // מעבר לשאלה/שלב הבא
+const sfxSelect=()=>bp(660,0,.05,"square",.07);
 
 let curVoice=null;
 function heVoices(){

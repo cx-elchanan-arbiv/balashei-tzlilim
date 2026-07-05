@@ -53,7 +53,7 @@ function bp(freq,start,dur,type,gain,glideTo,glossy,vib){
   if(vib){const l=c.createOscillator(),lg=c.createGain();l.frequency.value=vib;lg.gain.value=f*0.012;l.connect(lg).connect(o.frequency);l.start(t);l.stop(t+dur+.05);}
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain||.2,t+.01);
   g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-  connect(g,glossy);o.start(t);o.stop(t+dur+.05);
+  o.connect(g);connect(g,glossy);o.start(t);o.stop(t+dur+.05);
 }
 function bell(freq,start,dur,gain,glossy){ // additive harmonics + slight inharmonicity = real chime
   const c=AC(),t=c.currentTime+start;
@@ -61,10 +61,10 @@ function bell(freq,start,dur,gain,glossy){ // additive harmonics + slight inharm
     const o=c.createOscillator(),g=c.createGain();o.type="sine";o.frequency.value=vary(freq)*m;
     g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime((gain||.2)*a,t+.008);
     g.gain.exponentialRampToValueAtTime(.0001,t+dur*(1-i*.15));
-    connect(g,glossy&&i===0);o.start(t);o.stop(t+dur+.05);
+    o.connect(g);connect(g,glossy&&i===0);o.start(t);o.stop(t+dur+.05);
   });
 }
-function pluck(freq,start,dur,gain){const c=AC(),t=c.currentTime+start,o=c.createOscillator(),g=c.createGain();o.type="triangle";o.frequency.value=vary(freq);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain||.18,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+dur);connect(g);o.start(t);o.stop(t+dur+.03);}
+function pluck(freq,start,dur,gain){const c=AC(),t=c.currentTime+start,o=c.createOscillator(),g=c.createGain();o.type="triangle";o.frequency.value=vary(freq);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain||.18,t+.005);g.gain.exponentialRampToValueAtTime(.0001,t+dur);o.connect(g);connect(g);o.start(t);o.stop(t+dur+.03);}
 function noise(start,dur,gain,freq,q,type,glideTo){const c=AC(),t=c.currentTime+start;const b=c.createBuffer(1,Math.max(1,c.sampleRate*dur),c.sampleRate),d=b.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.4);const s=c.createBufferSource();s.buffer=b;const f=c.createBiquadFilter();f.type=type||"bandpass";f.frequency.setValueAtTime(freq||2000,t);if(glideTo)f.frequency.exponentialRampToValueAtTime(glideTo,t+dur);f.Q.value=q||1;const g=c.createGain();g.gain.value=gain||.15;s.connect(f).connect(g);connect(g);s.start(t);}
 const arp=(a,f,g,d,ty)=>a.forEach((x,i)=>bp(x,i*(f||.06),d||.2,ty||"sine",g||.14));
 
@@ -72,8 +72,6 @@ const arp=(a,f,g,d,ty)=>a.forEach((x,i)=>bp(x,i*(f||.06),d||.2,ty||"sine",g||.14
 const GOOD={
   "פעמון הרמוני":()=>bell(659,0,.6,.2),
   "נצנוץ מבריק":()=>arp([1319,1568,2093,2637],.05,.09,.3),
-  "עלייה קסומה":()=>[523,659,784,1047].forEach((f,i)=>bp(f,i*.06,.32,"sine",.14,0,false,6)),
-  "אקורד גדול":()=>{bell(523,0,.7,.12);bell(659,0,.7,.12);bell(784,.02,.75,.13);},
   "מטבע":()=>{bp(988,0,.08,"square",.12);bp(1319,.08,.24,"square",.13);},
   "מרימבה":()=>[659,880,1047].forEach((f,i)=>pluck(f,i*.08,.26,.18)),
   "תיבת-נגינה":()=>[1047,1319,1568].forEach((f,i)=>bell(f,i*.1,.5,.1)),
@@ -93,14 +91,12 @@ const TRY={
 };
 const STAR={
   "פופ":()=>{bp(880,0,.1,"triangle",.16);bp(1174,.06,.14,"triangle",.14);},
-  "נצנוץ-כוכב":()=>arp([1319,1568,2093],.05,.1,.18,"sine"),
   "דינג הרמוני":()=>bell(1047,0,.4,.16),
   "טווינקל":()=>[2093,1568,2093].forEach((f,i)=>bp(f,i*.05,.13,"sine",.09,0,true)),
 };
 const NEXT={
   "וווש":()=>{noise(0,.3,.12,700,1,"bandpass",3500);bp(523,0,.28,"sine",.09,1047);},
   "החלקה":()=>noise(0,.26,.13,600,1.5,"bandpass",4000),
-  "עלייה מהירה":()=>bp(523,0,.22,"sine",.14,1047),
   "פליק מבריק":()=>{bp(1568,0,.08,"triangle",.1);noise(.02,.18,.08,3000,1,"highpass");},
 };
 const CEL={
