@@ -1,0 +1,120 @@
+<!doctype html><html lang="he" dir="rtl"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>מעבדת צלילים — בלשי הצלילים</title>
+<style>
+  :root{--paper:#FBF6EC;--ink:#33302A;--soft:#7A7469;--line:#E7DFCE;--blue:#3D6AA8;--mint:#3E9E7A;--ochre:#E89A3C;--rose:#D9705F;}
+  body{font-family:-apple-system,system-ui,"Assistant",sans-serif;background:var(--paper);color:var(--ink);max-width:720px;margin:0 auto;padding:24px 18px 70px}
+  h1{font-size:26px;margin:0 0 2px}p.sub{color:var(--soft);margin:0 0 20px}
+  .sec{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px 18px;margin-bottom:16px;box-shadow:0 6px 16px rgba(51,48,42,.07)}
+  .sec h2{margin:0 0 4px;font-size:19px;display:flex;align-items:center;gap:8px}
+  .sec .hint{color:var(--soft);font-size:13px;margin:0 0 12px}
+  .grid{display:flex;flex-wrap:wrap;gap:10px}
+  button.snd{border:2px solid var(--line);background:#FFFDF8;border-radius:12px;padding:12px 16px;font-weight:800;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:transform .1s,border-color .15s,background .15s;min-width:120px;justify-content:center}
+  button.snd:active{transform:scale(.95)}
+  button.snd .num{background:var(--blue);color:#fff;border-radius:8px;width:24px;height:24px;display:grid;place-items:center;font-size:13px}
+  .good h2 .num,.good button .num{}
+  .c-good button.snd .num{background:var(--mint)} .c-good h2{color:var(--mint)}
+  .c-try button.snd .num{background:var(--ochre)} .c-try h2{color:var(--ochre)}
+  .c-star button.snd .num{background:var(--gold,#F2B233)}
+  .c-next button.snd .num{background:var(--blue)} .c-next h2{color:var(--blue)}
+  .c-cel button.snd .num{background:var(--rose)} .c-cel h2{color:var(--rose)}
+  .c-tap button.snd .num{background:#8A8578}
+  .tip{background:#FBEAD1;border-radius:12px;padding:14px 16px;font-size:14px;line-height:1.6;margin-top:6px}
+  .tip b{color:var(--ink)}
+</style></head><body>
+<h1>🎛️ מעבדת צלילים</h1>
+<p class="sub">לחץ על כל צליל להאזנה. תגיד לי איזה מספר אהבת בכל קטגוריה (למשל: "הצלחה 3, סיום 2, מעבר 1") — או "random".</p>
+
+<div class="sec c-good"><h2>✅ הצלחה <span style="font-size:13px;color:var(--soft);font-weight:400">(תשובה נכונה)</span></h2>
+  <p class="hint">קצר, נעים, מתגמל — אבל לא צעקני.</p><div class="grid" id="good"></div></div>
+
+<div class="sec c-try"><h2>🤔 טעות מזמינה <span style="font-size:13px;color:var(--soft);font-weight:400">(נסה שוב)</span></h2>
+  <p class="hint">רך וחם, לא בּוּזֶר — מזמין לנסות שוב.</p><div class="grid" id="try"></div></div>
+
+<div class="sec c-star"><h2>⭐ כוכב <span style="font-size:13px;color:var(--soft);font-weight:400">(זכייה בכוכב)</span></h2>
+  <p class="hint">נצנוץ קטן ומספק.</p><div class="grid" id="star"></div></div>
+
+<div class="sec c-next"><h2>➡️ מעבר לשלב/שאלה הבאה</h2>
+  <p class="hint">תחושת התקדמות — whoosh/עלייה.</p><div class="grid" id="next"></div></div>
+
+<div class="sec c-cel"><h2>🏆 סיום שלב <span style="font-size:13px;color:var(--soft);font-weight:400">(חגיגה)</span></h2>
+  <p class="hint">מנגינה שמחה קצרה.</p><div class="grid" id="cel"></div></div>
+
+<div class="sec c-tap"><h2>👆 לחיצה / מעבר-דף <span style="font-size:13px;color:var(--soft);font-weight:400">(עדין)</span></h2>
+  <p class="hint">מיקרו-משוב לכל נגיעה.</p><div class="grid" id="tap"></div></div>
+
+<div class="tip">💡 <b>איך לענות לי:</b> פשוט תכתוב מה בחרת מכל קטגוריה — לדוגמה: <b>"הצלחה 4, טעות 2, כוכב 1, מעבר 3, סיום 2, לחיצה 1"</b>. אפשר גם "עשה random על הכל" או "random רק בהצלחה". ואם משהו לא מוצא חן — תגיד ואוסיף עוד גרסאות.</div>
+
+<script>
+let ac;
+function AC(){if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();if(ac.state==="suspended")ac.resume();return ac;}
+function bp(freq,start,dur,type,gain,glideTo){
+  const c=AC(),t=c.currentTime+start,o=c.createOscillator(),g=c.createGain();
+  o.type=type||"sine";o.frequency.setValueAtTime(freq,t);
+  if(glideTo)o.frequency.exponentialRampToValueAtTime(glideTo,t+dur);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain||.2,t+.015);
+  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g).connect(c.destination);o.start(t);o.stop(t+dur+.03);
+}
+function noise(start,dur,gain,freq,q,type,glideTo){
+  const c=AC(),t=c.currentTime+start;
+  const b=c.createBuffer(1,Math.max(1,c.sampleRate*dur),c.sampleRate),d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.4);
+  const s=c.createBufferSource();s.buffer=b;
+  const f=c.createBiquadFilter();f.type=type||"bandpass";f.frequency.setValueAtTime(freq||2000,t);
+  if(glideTo)f.frequency.exponentialRampToValueAtTime(glideTo,t+dur);
+  f.Q.value=q||1;const g=c.createGain();g.gain.value=gain||.15;
+  s.connect(f).connect(g).connect(c.destination);s.start(t);
+}
+const seq=(arr,type,gain,dur)=>arr.forEach(([f,t])=>bp(f,t,dur||.2,type||"sine",gain||.16));
+
+// ---- SOUND BANKS ----
+const GOOD={
+  "פעמון":()=>seq([[523,0],[659,.09],[784,.18]],"sine",.17,.28),
+  "נצנוץ":()=>{seq([[784,0],[988,.07],[1319,.15]],"triangle",.14,.2);noise(.15,.25,.05,4000,2);},
+  "עלייה":()=>bp(440,0,.35,"sine",.16,1200),
+  "אקורד":()=>{bp(523,0,.4,"sine",.11);bp(659,0,.4,"sine",.11);bp(784,.02,.45,"sine",.12);},
+  "מטבע":()=>{bp(988,0,.08,"square",.12);bp(1319,.08,.22,"square",.13);},
+  "מרימבה":()=>seq([[659,0],[880,.09],[1047,.18]],"triangle",.16,.16),
+  "תיבת-נגינה":()=>seq([[1047,0],[1319,.1],[1568,.2]],"sine",.12,.3),
+  "דו-צליל":()=>{bp(659,0,.12,"triangle",.15);bp(880,.12,.28,"sine",.17);},
+};
+const TRY={
+  "צניחה רכה":()=>{bp(392,0,.16,"sine",.12);bp(330,.12,.26,"sine",.12);},
+  "וובל":()=>{bp(440,0,.12,"triangle",.1);bp(392,.11,.14,"triangle",.1);bp(440,.24,.16,"triangle",.1);},
+  "רך":()=>{bp(349,0,.2,"sine",.11);bp(415,.14,.22,"sine",.1);},
+  "המהום נמוך":()=>{bp(330,0,.18,"sine",.12);bp(294,.16,.28,"sine",.12);},
+  "בּוֹאינג":()=>bp(500,0,.28,"sine",.13,240),
+};
+const STAR={
+  "פופ":()=>{bp(880,0,.1,"triangle",.16);bp(1174,.06,.14,"triangle",.14);},
+  "נצנוץ-כוכב":()=>seq([[1319,0],[1568,.06],[2093,.12]],"triangle",.12,.14),
+  "דינג":()=>bp(1047,0,.22,"sine",.16),
+};
+const NEXT={
+  "וווש":()=>{noise(0,.3,.12,800,1,"bandpass",3000);bp(523,0,.28,"sine",.1,1047);},
+  "החלקה":()=>noise(0,.28,.14,600,1.5,"bandpass",4000),
+  "עלייה מהירה":()=>bp(523,0,.22,"sine",.14,1047),
+};
+const CEL={
+  "פאנפרה":()=>seq([[523,0],[659,.12],[784,.24],[1047,.38]],"sine",.15,.24),
+  "פאנפרה ארוכה":()=>seq([[392,0],[523,.12],[659,.24],[784,.36],[1047,.5]],"sine",.15,.26),
+  "ריצה עולה":()=>[523,587,659,784,880,1047,1319,1568].forEach((f,i)=>bp(f,i*.06,.16,"triangle",.13)),
+  "שמח":()=>seq([[659,0],[659,.12],[784,.24],[1047,.38],[880,.52],[1047,.62],[1319,.76]],"sine",.14,.22),
+};
+const TAP={
+  "קליק":()=>bp(660,0,.05,"square",.07),
+  "טיק":()=>bp(880,0,.04,"triangle",.08),
+  "רך":()=>bp(520,0,.06,"sine",.06),
+  "מעבר-דף":()=>noise(0,.3,.12,1600,1,"bandpass"),
+};
+
+function fill(id,bank){
+  const box=document.getElementById(id);let n=1;
+  for(const name in bank){const i=n++;const b=document.createElement("button");b.className="snd";
+    b.innerHTML='<span class="num">'+i+'</span>'+name;
+    b.onclick=()=>{AC();bank[name]();};box.appendChild(b);}
+}
+fill("good",GOOD);fill("try",TRY);fill("star",STAR);fill("next",NEXT);fill("cel",CEL);fill("tap",TAP);
+</script>
+</body></html>
